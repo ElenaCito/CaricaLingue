@@ -1,0 +1,121 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, StrUtils;
+
+type
+  TForm1 = class(TForm)
+    btn1: TButton;
+    mmo1: TMemo;
+    procedure btn1Click(Sender: TObject);
+  private
+    { Private declarations }
+    function IsOk(LString:string): Boolean;
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+{$R *.dfm}
+
+procedure TForm1.btn1Click(Sender: TObject);
+var
+  LLine:string;
+  LRowIndex:Integer;
+  LFile: TextFile;
+  LStrings:TStringList;
+  LEqualIndex: Integer;
+  LTemp: Char;
+  LLongCaption: string;
+  LStart, LEnd: Integer;
+
+begin
+  LRowIndex:= 0;
+  LStrings:= TStringList.Create;
+  if FileExists('D:\prova.txt') then
+  begin
+    //Apro il file e copio tutte le righe in una TStringList
+    AssignFile(LFile, 'D:\prova.txt');
+    Reset(LFile);
+    while not Eof(LFile) do
+    begin
+      Readln(LFile, LLine);
+      LStrings.Append(LLine);
+      //mmo1.Lines.Add(LLine);
+    end;
+    CloseFile(LFile);
+    LRowIndex := 0;
+    //Analizzo tutte le stringhe della TStringList
+    //Controllo che le stringhe non siano finite (Count si usa per le liste, lenght array)
+    while LRowIndex < LStrings.Count do
+    begin
+      LLine:= LStrings[LRowIndex];
+      if LLine.Contains('Caption') then
+      begin
+        //trovo l'indice della prima occorrenza dell'uguale (tra 0 ad n-1)
+        LEqualIndex:= LLine.IndexOf('=');
+        //Incremento indice per analizzare char successivo
+        LEqualIndex:= LEqualIndex + 1 + 1;
+        LLongCaption:= '';
+        //se l'uguale non è l'ultimo char della stringa
+        if (LEqualIndex)<= Length(LLine) then
+        begin
+          LTemp:= LLine[LEqualIndex];
+          //trovo l'indice della prima occorrenza dell'apice
+          LStart:= LLine.IndexOf('''') +1;
+          //trovo l'indice dell'ultima occorrenza dell'apice
+          LEnd:= LLine.LastIndexOf('''');
+          //concateno a LLongCaption la sottostringa che va dall'indice
+          // Lstart ad LEnd-LStart
+          LLongCaption:= LLongCaption + LLine.Substring(LStart, (LEnd-Lstart));
+          mmo1.Lines.Add(LLongCaption);
+        end
+        //se l'uguale è l'ultimo elemento della stringa
+        else
+        begin
+          //incremento l'indice della riga
+          LRowIndex:= LRowIndex +1;
+          LLongCaption:= '';
+          //controllo che la TStringList non sia finita e che non sia
+          //un nuovo assegnamento del tipo * = *
+          while(LRowIndex < LStrings.Count -1) and not IsOk(LStrings[LRowIndex]) do
+          begin
+            //trovo l'indice della prima occorrenza dell'apice
+            LStart:= LStrings[LRowIndex].IndexOf('''') +1;
+            //trovo l'indice dell'ultima occorrenza dell'apice
+            LEnd:= LStrings[LRowIndex].LastIndexOf('''');
+            //concateno a LLongCaption la sottostringa che va dall'indice
+            // Lstart ad LEnd-LStart
+            LLongCaption:= LLongCaption + LStrings[LRowIndex].Substring(LStart, (LEnd-Lstart));
+            //incremento per controllare la riga successiva
+            LRowIndex:= LRowIndex+1;
+          end;
+          LRowIndex := LRowIndex - 1;
+          mmo1.Lines.Add(LLongCaption);
+        end;
+      end;
+     LRowIndex:= LRowIndex + 1;
+    end;
+  end;
+end;
+
+//funzione che controlla che la riga è del tipo * = *
+function TForm1.IsOk(LString: string): Boolean;
+var
+  LSplitted: TArray<string>;
+begin
+  //splitto la stringa sull'uguale
+  LSplitted:= LString.Split(['=']);
+  //se ho splittato la stringa in 2 parti restituisco vero
+  result:= Length(LSplitted) = 2;
+end;
+
+end.
+

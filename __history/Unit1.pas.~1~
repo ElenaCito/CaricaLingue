@@ -1,0 +1,103 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, StrUtils;
+
+type
+  TForm1 = class(TForm)
+    btn1: TButton;
+    mmo1: TMemo;
+    procedure btn1Click(Sender: TObject);
+  private
+    { Private declarations }
+    function IsOk(LString:string): Boolean;
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+{$R *.dfm}
+
+procedure TForm1.btn1Click(Sender: TObject);
+var
+  LLine:string;
+  LRowIndex:Integer;
+  LFile: TextFile;
+  LStrings:TStringList;
+  LEqualIndex: Integer;
+  LTemp: Char;
+  LLongCaption: string;
+  LStart, LEnd: Integer;
+
+begin
+  LRowIndex:= 0;
+  LStrings:= TStringList.Create;
+  if FileExists('D:\prova.txt') then
+  begin
+    AssignFile(LFile, 'D:\prova.txt');
+    Reset(LFile);
+    while not Eof(LFile) do
+    begin
+      Readln(LFile, LLine);
+      LStrings.Append(LLine);
+      //mmo1.Lines.Add(LLine);
+    end;
+    CloseFile(LFile);
+    LRowIndex := 0;
+    while LRowIndex < LStrings.Count do
+    begin
+      LLine:= LStrings[LRowIndex];
+      if LLine.Contains('Caption') then
+      begin
+        LEqualIndex:= LLine.IndexOf('=');
+        LEqualIndex:= LEqualIndex + 2;
+        LLongCaption:= '';
+        if (LEqualIndex)< Length(LLine) then
+        begin
+          LTemp:= LLine[LEqualIndex];
+          LStart:= LLine.IndexOf('''') +1;
+          LEnd:= LLine.LastIndexOf('''');
+          LLongCaption:= LLongCaption + LLine.Substring(LStart, (LEnd-Lstart));
+          mmo1.Lines.Add(LLongCaption);
+        end
+        else
+        begin
+          LRowIndex:= LRowIndex +1;
+          LLongCaption:= '';
+          while(LRowIndex < LStrings.Count -1) and not IsOk(LStrings[LRowIndex]) do
+          begin
+            LStart:= LStrings[LRowIndex].IndexOf('''') +1;
+            LEnd:= LStrings[LRowIndex].LastIndexOf('''');
+            LLongCaption:= LLongCaption + LStrings[LRowIndex].Substring(LStart, (LEnd-Lstart));
+            LRowIndex:= LRowIndex+1;
+          end;
+          LRowIndex := LRowIndex - 1;
+          mmo1.Lines.Add(LLongCaption);
+        end;
+      end;
+     LRowIndex:= LRowIndex + 1;
+    end;
+
+
+  end;
+
+
+end;
+
+function TForm1.IsOk(LString: string): Boolean;
+var
+  LSplitted: TArray<string>;
+begin
+  LSplitted:= LString.Split(['=']);
+  result:= Length(LSplitted) = 2;
+end;
+
+end.
+
